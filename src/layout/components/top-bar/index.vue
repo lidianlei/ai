@@ -4,7 +4,7 @@
     <div class="flex-center h-full">
       <div class="app-title-container cursor" @click="router.push('/')">
         <div class="logo flex-center">
-          <LogoFull />
+          <LogoFull/>
         </div>
       </div>
       <TopMenu></TopMenu>
