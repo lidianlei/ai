@@ -23,7 +23,8 @@ export default {
     oppose: 'Dislike',
     cancelOppose: 'Undo Dislike',
     continue: 'Continue',
-    stopChat: 'Stop Response'
+    stopChat: 'Stop Response',
+    lineChart: 'Column chart'
   },
   tip: {
     error500Message: 'Sorry, the service is currently under maintenance. Please try again later!',
@@ -91,5 +92,5 @@ export default {
     question: 'User Question',
     optimizationQuestion: 'Optimized Question'
   },
-  editTitle: 'Edit Title',
+  editTitle: 'Edit Title'
 }

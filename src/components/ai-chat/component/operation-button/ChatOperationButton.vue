@@ -7,7 +7,12 @@
   <div>
     <!-- 语音播放 -->
     <span v-if="tts">
-      <el-tooltip effect="dark" :content="$t('chat.operation.play')" placement="top" v-if="!audioPlayerStatus">
+      <el-tooltip
+        effect="dark"
+        :content="$t('chat.operation.play')"
+        placement="top"
+        v-if="!audioPlayerStatus"
+      >
         <el-button text :disabled="!data?.write_ed" @click="playAnswerText(data?.answer_text)">
           <AppIcon iconName="app-video-play"></AppIcon>
         </el-button>
@@ -73,20 +78,32 @@
           <AppIcon iconName="app-oppose-color"></AppIcon>
         </el-button>
       </el-tooltip>
+      <el-tooltip effect="dark" :content="$t('chat.operation.lineChart')" placement="top">
+        <el-button text @click="handleChart()" :disabled="loading"> 柱形图 </el-button>
+      </el-tooltip>
     </span>
+    <LineEcharts v-if="chartState" :chartState="chartState" @closeChart="chartState = false":echartsData="echartsData"></LineEcharts>
   </div>
   <!-- 先渲染，不然不能播放   -->
   <audio ref="audioPlayer" v-for="item in audioList" :key="item" controls hidden="hidden"></audio>
 </template>
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, toRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import { copyClick } from '@/utils/clipboard'
 import applicationApi from '@/api/application'
 import { datetimeFormat } from '@/utils/time'
 import { MsgError } from '@/utils/message'
 import { t } from '@/locales'
+import LineEcharts from '@/components/echarts/LineEcharts.vue'
+import { ElMessage } from 'element-plus'
+
+
 const route = useRoute()
+
+//echartsData
+const echartsData = ref({})
+let chartState = ref(false)
 const {
   params: { id }
 } = route as any
@@ -157,9 +174,7 @@ function markdownToPlainText(md: string) {
 }
 
 function removeFormRander(text: string) {
-  return text
-    .replace(/<form_rander>[\s\S]*?<\/form_rander>/g, '')
-    .trim()
+  return text.replace(/<form_rander>[\s\S]*?<\/form_rander>/g, '').trim()
 }
 
 const playAnswerText = (text: string) => {
@@ -174,7 +189,7 @@ const playAnswerText = (text: string) => {
   audioPlayerStatus.value = true
   // 分割成多份
   audioList.value = text.split(/(<audio[^>]*><\/audio>)/).filter((item) => item.trim().length > 0)
-  nextTick(()=>{
+  nextTick(() => {
     // console.log(audioList.value, audioPlayer.value)
     playAnswerTextPart()
   })
@@ -189,7 +204,8 @@ const playAnswerTextPart = () => {
   }
   if (audioList.value[currentAudioIndex.value].includes('<audio')) {
     if (audioPlayer.value) {
-      audioPlayer.value[currentAudioIndex.value].src = audioList.value[currentAudioIndex.value].match(/src="([^"]*)"/)?.[1] || ''
+      audioPlayer.value[currentAudioIndex.value].src =
+        audioList.value[currentAudioIndex.value].match(/src="([^"]*)"/)?.[1] || ''
       audioPlayer.value[currentAudioIndex.value].play() // 自动播放音频
       audioPlayer.value[currentAudioIndex.value].onended = () => {
         currentAudioIndex.value += 1
@@ -200,7 +216,10 @@ const playAnswerTextPart = () => {
     if (audioList.value[currentAudioIndex.value] !== utterance.value?.text) {
       window.speechSynthesis.cancel()
     }
-    if (window.speechSynthesis.paused && audioList.value[currentAudioIndex.value] === utterance.value?.text) {
+    if (
+      window.speechSynthesis.paused &&
+      audioList.value[currentAudioIndex.value] === utterance.value?.text
+    ) {
       window.speechSynthesis.resume()
       return
     }
@@ -224,7 +243,11 @@ const playAnswerTextPart = () => {
       return
     }
     applicationApi
-      .postTextToSpeech((props.applicationId as string) || (id as string), { text: audioList.value[currentAudioIndex.value] }, loading)
+      .postTextToSpeech(
+        (props.applicationId as string) || (id as string),
+        { text: audioList.value[currentAudioIndex.value] },
+        loading
+      )
       .then(async (res: any) => {
         if (res.type === 'application/json') {
           const text = await res.text()
@@ -278,9 +301,34 @@ const pausePlayAnswerText = () => {
 
 onMounted(() => {
   // 第一次回答后自动播放， 打开历史记录不自动播放
-  if (props.tts && props.tts_autoplay && buttonData.value.write_ed && !buttonData.value.update_time) {
+  if (
+    props.tts &&
+    props.tts_autoplay &&
+    buttonData.value.write_ed &&
+    !buttonData.value.update_time
+  ) {
     playAnswerText(buttonData.value.answer_text)
   }
 })
+
+// 移除注释的函数
+function removeComments(jsonString: any) {
+  return jsonString.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')
+}
+
+const handleChart = () => {
+  // 提取 JSON 或 JavaScript 对象的正则表达式
+  const regex = /```(?:javascript|json)\s*({[\s\S]*?})\s*```/
+  const match = toRaw(props.data).answer_text.match(regex)
+  // 获取和解析 echarts 对象
+  if (match && match[1]) {
+    const jsonString = removeComments(match[1]);
+    echartsData.value = JSON.parse(jsonString)?.echarts || JSON.parse(jsonString);
+    chartState.value = true;
+  }else{
+    ElMessage.error('未找到echarts数据')
+  }
+
+}
 </script>
 <style lang="scss" scoped></style>

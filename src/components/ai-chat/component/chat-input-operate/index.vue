@@ -184,6 +184,7 @@
             :disabled="isDisabledChart || loading"
             @click="sendChatHandle"
           >
+
             <img v-show="isDisabledChart || loading" src="@/assets/icon_send.svg" alt="" />
             <SendIcon v-show="!isDisabledChart && !loading" />
           </el-button>
