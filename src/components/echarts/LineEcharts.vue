@@ -19,7 +19,6 @@ let chartRef = ref(null)
 const props = defineProps<{
   echartsData: object | any
   chartState: boolean
-  closeChart: () => void
 }>()
 
 
