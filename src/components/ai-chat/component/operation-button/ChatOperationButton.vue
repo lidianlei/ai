@@ -74,15 +74,16 @@
         placement="top"
         v-if="buttonData?.vote_status === '1'"
       >
-        <el-button text @click="voteHandle('-1')" :disabled="loading">
+        <el-button text @click="voteHandle('-1')" :disabled="loading">app-lineChart
           <AppIcon iconName="app-oppose-color"></AppIcon>
         </el-button>
       </el-tooltip>
       <el-tooltip effect="dark" :content="$t('chat.operation.lineChart')" placement="top">
-        <el-button text @click="handleChart()" :disabled="loading"> 柱形图 </el-button>
+        <el-button text @click="handleChart()" :disabled="loading">
+          <AppIcon iconName="app-line-chart"></AppIcon></el-button>
       </el-tooltip>
     </span>
-    <LineEcharts v-if="chartState" :chartState="chartState" @closeChart="chartState = false":echartsData="echartsData"></LineEcharts>
+    <LineEcharts v-if="chartState" :chartState="chartState" @closeChart="chartState = false" :echartsData="echartsData"/>
   </div>
   <!-- 先渲染，不然不能播放   -->
   <audio ref="audioPlayer" v-for="item in audioList" :key="item" controls hidden="hidden"></audio>
